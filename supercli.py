@@ -246,7 +246,7 @@ def filter_by_episode(episode: int):
 			print(json.dumps(i, indent=4))
 
 @app.command()
-def most_frequent_character():
+def most_frequent_character(max: int=None):
 	all_characters = Character.get_all()
 	# get all characters names
 	names = []
@@ -265,7 +265,11 @@ def most_frequent_character():
 			res[names[i] + "-" + str(i)] = characters[i]
 		else:
 			res[names[i]] = characters[i]
-	print(res)
+	del res[None]
+	if max != None:
+		print(dict(list(res.items())[:max]))
+	else:
+		print(res)
 
 
 if __name__ == "__main__":
