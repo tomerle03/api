@@ -16,8 +16,8 @@ class Character():
 	def get_all():
 		return Requests.get_all(CHARACTER_URL)
 
-	def getid(id=None):
-		return Requests.getid(CHARACTER_URL, id=None)
+	def getid(id):
+		return Requests.getid(CHARACTER_URL, id)
 
 	def filter(**kwargs):
 		return Requests.filter(CHARACTER_URL, **kwargs)
@@ -31,8 +31,8 @@ class Location():
 	def get_all():
 		return Requests.get_all(LOCATION_URL)
 
-	def getid(id=None):
-		return Requests.getid(LOCATION_URL, id=None)
+	def getid(id):
+		return Requests.getid(LOCATION_URL, id)
 
 	def filter(**kwargs):
 		return Requests.filter(LOCATION_URL, **kwargs)
@@ -47,8 +47,8 @@ class Episode():
 	def get_all():
 		return Requests.get_all(EPISODE_URL)
 
-	def getid(id=None):
-		return Requests.getid(EPISODE_URL, id=None)
+	def getid(id):
+		return Requests.getid(EPISODE_URL, id)
 
 	def filter(**kwargs):
 		return Requests.filter(EPISODE_URL, **kwargs)
@@ -72,12 +72,12 @@ class Requests():
 		res = [i for a in res for i in a]
 		return res
 	
-	def getid(url, id=None):
+	def getid(url, id):
 		if id==None:
 			print("You need to pass id of character to get output.")
 			print("To get list of all characters, use getall() method.")
 			return
-		return json.dumps(requests.get(url+str(id)).json(), indent=4)
+		return requests.get(url+str(id)).json()
 
 	def filter(url, **kwargs):
 		for value in kwargs:
@@ -90,7 +90,7 @@ class Requests():
 		while req["info"]["next"]:
 			req = requests.get(req['info']['next']).json()
 			res.append(req["results"])
-		return res[0]
+		return res
 	
 
 	def filter_types(url):

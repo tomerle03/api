@@ -2,6 +2,10 @@
 import typer
 import json
 import datetime
+import operator
+import urllib.request
+from PIL import Image
+from io import BytesIO
 
 from classes import *
 
@@ -201,9 +205,34 @@ def most_frequent_character(max: int=None):
 			res[names[i]] = characters[i]
 	del res[None]
 	if max != None:
-		print(dict(list(res.items())[:max]))
+		tmp = dict(list(res.items())[:max])
+		print(json.dumps(dict(sorted(tmp.items(), key=operator.itemgetter(1),reverse=True)), indent=4))
 	else:
-		print(res)
+		print(json.dumps(dict(sorted(res.items(), key=operator.itemgetter(1),reverse=True)), indent=4))
+
+
+@app.command()
+def get_image(name=None, type=None, status=None, species=None, gender=None, id: int=None):
+	if id != None:
+		image_url = Character.getid(id)["image"]
+	else:
+		args = ""
+		for i in list(locals().keys()):
+			if eval(i) != None and i != "args":
+				args += i + "=\"" + str(eval(i)) + "\","
+
+		args = args[:-1]
+		command = "Character.filter(" + args + ")"
+		char_list = eval(command)[0]
+		if len(char_list) != 1:
+			print("ur filters got no or more then one character")
+			return
+		image_url = char_list[0]["image"]
+	
+	with Image.open(BytesIO(requests.get(image_url).content)) as im:
+		im.show()
+	return None
+	
 
 
 if __name__ == "__main__":
