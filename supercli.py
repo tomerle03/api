@@ -3,9 +3,10 @@ import typer
 import json
 import datetime
 import operator
-import urllib.request
+import pandas as pd
 from PIL import Image
 from io import BytesIO
+from IPython.display import display
 
 from classes import *
 
@@ -40,12 +41,19 @@ def get_attributes(api: str):
 	
 # get a type like location and returns all the locations
 @app.command()
-def get_all(api: str):
+def get_all(api: str, table: str=None):
 	"""
 	enter type with cappital letter to get all objects
 	"""
 	command = api + ".get_all()"
-	print(json.dumps(eval(command), indent=4))
+	tmp = eval(command)
+	if table == None:
+		print(json.dumps(tmp, indent=4))
+	else:
+		print("{:<11}| {:<10}".format('key','value'))
+		print("{:<11}| {:<10}".format('-----','------'))
+		for i in tmp:
+			to_table(i)
 	
 
 # get a type like location and an id as integer 
@@ -232,8 +240,21 @@ def get_image(name=None, type=None, status=None, species=None, gender=None, id: 
 	with Image.open(BytesIO(requests.get(image_url).content)) as im:
 		im.show()
 	return None
-	
 
+
+def to_table(jsn):
+	for key in jsn:
+		if type(jsn[key]) is dict:
+			jsn[key] = jsn[key]["name"]
+		elif type(jsn[key]) is list:
+			jsn[key] = len(jsn[key])
+		
+	for v in jsn.items():
+		label, num = v
+		print("{:<11}| {:<10}".format(label, num))
+	print("----------------------------------------")
+
+		
 
 if __name__ == "__main__":
 	app()
