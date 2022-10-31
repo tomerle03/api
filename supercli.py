@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 import typer
 import json
-import requests
 import datetime
 
+from classes import *
 
 app = typer.Typer()
 
@@ -21,150 +21,48 @@ def translate_date(episode_date: str) -> datetime.datetime.date:
 	return datetime.datetime.strptime(episode_date, "%B %d, %Y").date()
 
 
-class Character():
-
-	def get_all():
-		req = requests.get(character_url).json()
-		res = []
-		res.append(req["results"])
-		while req["info"]["next"]:
-			req = requests.get(req['info']['next']).json()
-			res.append(req["results"])
-		res = [i for a in res for i in a]
-		return res
-
-	def get_page(number):
-		return json.dumps(requests.get(character_url+'?page='+str(number)).json(), indent=4)
-
-	def getid(id=None):
-		if id==None:
-			print("You need to pass id of character to get output.")
-			print("To get list of all characters, use getall() method.")
-			return
-		return json.dumps(requests.get(character_url+str(id)).json(), indent=4)
-
-	def filter(**kwargs):
-		for value in kwargs:
-				kwargs[value]=value+"="+kwargs[value]
-		query_url='&'.join([values for values in kwargs.values()])
-		final_url=character_url+"?"+query_url
-		req = requests.get(final_url).json()
-		res = []
-		res.append(req["results"])
-		while req["info"]["next"]:
-			req = requests.get(req['info']['next']).json()
-			res.append(req["results"])
-		return res
-
-	def filter_types():
-		temp=requests.get(character_url).json()
-		return temp['results'][0].keys()
-
-class Location():
-
-	def get_all():
-		req = requests.get(location_url).json()
-		res = []
-		res.append(req["results"])
-		while req["info"]["next"]:
-			req = requests.get(req['info']['next']).json()
-			res.append(req["results"])
-		res = [i for a in res for i in a]
-		return res
-
-	def getid(id=None):
-		if id==None:
-			print("You need to pass id of character to get output.")
-			print("To get list of all characters, use getall() method.")
-			return
-		return json.dumps(requests.get(location_url+str(id)).json(), indent=4)
-
-	def filter(**kwargs):
-		for value in kwargs:
-				kwargs[value]=value+"="+kwargs[value]
-		query_url='&'.join([values for values in kwargs.values()])
-		final_url=location_url+'?'+query_url
-		print(final_url)
-		req = requests.get(final_url).json()
-		res = []
-		res.append(req["results"])
-		while req["info"]["next"]:
-			req = requests.get(req['info']['next']).json()
-			res.append(req["results"])
-		return res
-
-	def filter_types():
-		temp=requests.get(location_url).json()
-		return temp['results'][0].keys()
-
-
-class Episode():
-
-	def get_all():
-		# return json.dumps(requests.get(episode_url).json(), indent=4)\
-		req = requests.get(episode_url).json()
-		res = []
-		res.append(req["results"][:])
-		while req["info"]["next"]:
-			req = requests.get(req['info']['next']).json()
-			res.append(req["results"][:])
-
-		res = [i for a in res for i in a]
-		return res
-
-	def getid(id=None):
-		if id==None:
-			print("You need to pass id of character to get output.")
-			print("To get list of all characters, use getall() method.")
-			return
-		return json.dumps(requests.get(episode_url+str(id)).json(), indent=4)
-
-	def filter(**kwargs):
-		for value in kwargs:
-				kwargs[value]=value+"="+kwargs[value]
-		query_url='&'.join([values for values in kwargs.values()])
-		final_url=episode_url+'?'+query_url
-		req = requests.get(final_url).json()
-		res = []
-		res.append(req["results"])
-		while req["info"]["next"]:
-			req = requests.get(req['info']['next']).json()
-			res.append(req["results"])
-		return res[0]
-	
-
-	def filter_types():
-		temp=requests.get(episode_url).json()
-		return temp['results'][0].keys()
-
-	
-	
-
+# get a type like location and returns 
+# the atrributes that describes the class
 @app.command()
 def get_attributes(api: str):
+	"""
+	enter a type with cappital letter
+	to get q
+	"""
 	command = api + ".filter_types()"
-	print(type + " attr are: ")
+	print(api + " attr are: ")
 	print(list(eval(command)))
 
+	
+# get a type like location and returns all the locations
 @app.command()
 def get_all(api: str):
+	"""
+	enter type with cappital letter to get all objects
+	"""
 	command = api + ".get_all()"
 	print(json.dumps(eval(command), indent=4))
 	
 
-	
+# get a type like location and an id as integer 
+# and return the object with that id 
 @app.command()
 def get_by_id(api: str, id: int):
+	"""
+	get type like location with cappital letter
+	and an id as integer and get an object with that id
+	"""
 	command = api + ".getid(" + str(id) + ")"
 	print(json.dumps(eval(command), indent=4))
 
+
+# filter all the episodes by optional parametes 
 @app.command()
 def filter_episode(name=None, episode=None):
 	args = ""
 	for i in list(locals().keys()):
 		if eval(i) != None and i != "args":
 			args += i + "=\"" + str(eval(i)) + "\","
-
 	args = args[:-1]
 	command = "Episode.filter(" + args + ")"
 	print(json.dumps(eval(command), indent=4))

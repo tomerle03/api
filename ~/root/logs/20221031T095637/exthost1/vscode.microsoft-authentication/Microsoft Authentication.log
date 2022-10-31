@@ -1,0 +1,4 @@
+[2022-10-31 09:56:38.982] [Microsoft Authentication] [info] Reading sessions from secret storage...
+[2022-10-31 09:56:38.982] [Microsoft Authentication] [info] Got 0 stored sessions
+[2022-10-31 09:56:39.011] [Microsoft Authentication] [info] Getting sessions for the following scopes: email offline_access openid profile
+[2022-10-31 09:56:39.011] [Microsoft Authentication] [info] Got 0 sessions for scopes: email offline_access openid profile
