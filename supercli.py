@@ -8,6 +8,7 @@ import pandas as pd
 from PIL import Image
 from io import BytesIO
 from IPython.display import display
+import inspect
 
 from classes import *
 
@@ -311,15 +312,22 @@ def most_frequent_character(max: int=None, table: str=None):
 	for character in all_characters:
 		characters[int(character["id"])] = len(character["episode"])
 		
+	 
 	res = {}
 	for i in range(len(names)):
+		# checking for duplicates and if there are it will add the id to the name like XXXX=1234
 		if names[i] in res:
 			res[names[i] + "-" + str(i)] = characters[i]
 		else:
 			res[names[i]] = characters[i]
+
+	# delete the first element because it has no use. the dict start at 1 not 0
 	del res[None]
 	if max != None:
+		# ordering the dict by desc and saving the top max result to tmp
 		tmp = dict(sorted(dict(list(res.items())[:max]).items(), key=operator.itemgetter(1),reverse=True))
+		
+		# check if user want to print a table or json
 		if table == None:
 			print(json.dumps(tmp, indent=4))
 		else:
@@ -331,6 +339,7 @@ def most_frequent_character(max: int=None, table: str=None):
 			else:
 				to_table(tmp)
 	else:
+		# ordering the dict by desc
 		tmp = dict(sorted(res.items(), key=operator.itemgetter(1),reverse=True))
 		if table == None:
 			print(json.dumps(tmp, indent=4))
@@ -346,6 +355,10 @@ def most_frequent_character(max: int=None, table: str=None):
 
 @app.command()
 def get_image(name=None, type=None, status=None, species=None, gender=None, id: int=None):
+	"""
+	this func receives filters about characters and if there is only one 
+	result it will open a photo of that character
+	"""
 	if id != None:
 		image_url = Character.getid(id)["image"]
 	else:
