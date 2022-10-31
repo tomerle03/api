@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import itertools
 import typer
 import json
 import datetime
@@ -26,6 +27,22 @@ def translate_date(episode_date: str) -> datetime.datetime.date:
 	return datetime.datetime.strptime(episode_date, "%B %d, %Y").date()
 
 
+def to_table(jsn):
+	"""
+	this func receives a dict and prints it as a table
+	"""
+
+	for key in jsn:
+		if type(jsn[key]) is dict:
+			jsn[key] = jsn[key]["name"]
+		elif type(jsn[key]) is list:
+			jsn[key] = len(jsn[key])
+		
+	for v in jsn.items():
+		label, num = v
+		print("{:<15}| {:<10}".format(label, num))
+	print("----------------------------------------")
+
 # get a type like location and returns 
 # the atrributes that describes the class
 @app.command()
@@ -50,8 +67,8 @@ def get_all(api: str, table: str=None):
 	if table == None:
 		print(json.dumps(tmp, indent=4))
 	else:
-		print("{:<11}| {:<10}".format('key','value'))
-		print("{:<11}| {:<10}".format('-----','------'))
+		print("{:<15}| {:<10}".format('key','value'))
+		print("{:<15}| {:<10}".format('-----','------'))
 		for i in tmp:
 			to_table(i)
 	
@@ -59,18 +76,28 @@ def get_all(api: str, table: str=None):
 # get a type like location and an id as integer 
 # and return the object with that id 
 @app.command()
-def get_by_id(api: str, id: int):
+def get_by_id(api: str, id: int, table: str=None):
 	"""
 	get type like location with cappital letter
 	and an id as integer and get an object with that id
 	"""
 	command = api + ".getid(" + str(id) + ")"
-	print(json.dumps(eval(command), indent=4))
+	tmp = eval(command)
+	if table == None:
+		print(json.dumps(tmp, indent=4))
+	else:
+		print("{:<15}| {:<10}".format('key','value'))
+		print("{:<15}| {:<10}".format('-----','------'))
+		if type(tmp) is list:
+			for i in tmp:
+				to_table(i)
+		else:
+			to_table(tmp)
 
 
 # filter all the episodes by optional parametes 
 @app.command()
-def filter_episode(name=None, episode=None):
+def filter_episode(name=None, episode=None, table: str=None):
 	"""
 	get param for episode to filter
 	run "./supercli.py get-attributes Episode"
@@ -81,11 +108,19 @@ def filter_episode(name=None, episode=None):
 			args += i + "=\"" + str(eval(i)) + "\","
 	args = args[:-1]
 	command = "Episode.filter(" + args + ")"
-	print(json.dumps(eval(command), indent=4))
+	tmp = eval(command)
+	for i in tmp:
+		if table == None:
+			print(json.dumps(i, indent=4))
+		else:
+			print("{:<15}| {:<10}".format('key','value'))
+			print("{:<15}| {:<10}".format('-----','------'))
+			for j in i:
+				to_table(j)
 
 	
 @app.command()
-def filter_location(name=None, type=None, dimension=None):
+def filter_location(name=None, type=None, dimension=None, table: str=None):
 	"""
 	get param for location to filter
 	run "./supercli.py get-attributes Location"
@@ -96,13 +131,20 @@ def filter_location(name=None, type=None, dimension=None):
 			args += i + "=\"" + str(eval(i)) + "\","
 	args = args[:-1]
 	command = "Location.filter(" + args + ")"
-	print(command)
-	print(json.dumps(eval(command), indent=4))
+	tmp = eval(command)
+	tmp = list(itertools.chain.from_iterable(tmp))
+	if table == None:
+		print(json.dumps(tmp, indent=4))
+	else:
+		print("{:<15}| {:<10}".format('key','value'))
+		print("{:<15}| {:<10}".format('-----','------'))
+		for i in tmp:
+			to_table(i)
 			
 	
 	
 @app.command()
-def filter_character(name=None, type=None, status=None, species=None, gender=None):
+def filter_character(name=None, type=None, status=None, species=None, gender=None, table: str=None):
 	"""
 	get param for Character to filter
 	run "./supercli.py get-attributes Character"
@@ -114,58 +156,102 @@ def filter_character(name=None, type=None, status=None, species=None, gender=Non
 
 	args = args[:-1]
 	command = "Character.filter(" + args + ")"
-	print(json.dumps(eval(command), indent=4))
+	tmp = eval(command)
+	tmp = list(itertools.chain.from_iterable(tmp))
+	if table == None:
+		print(json.dumps(tmp, indent=4))
+	else:
+		print("{:<15}| {:<10}".format('key','value'))
+		print("{:<15}| {:<10}".format('-----','------'))
+		for i in tmp:
+			to_table(i)
 
 	
 @app.command()
-def filter_by_date(year: int, month: int, day: int, operation: str):
+def filter_by_date(y: int, m: int, d: int, op: str, table: str=None):
 	"""
 	enter year month and day and and > or < to get all the
 	episodes before or after the input date
 	"""
-	curr = datetime.datetime(year=year, month=month, day=day).date()
+	curr = datetime.datetime(year=y, month=m, day=d).date()
 	all_episodes = Episode.get_all()
 	for i in all_episodes:
-		tmp = translate_date(i["air_date"])
-		if operation == "<":
-			if tmp < curr:
-				print(json.dumps(i, indent=4))
-		elif operation == ">":
-			if tmp > curr:
-				print(json.dumps(i, indent=4))
+		date = translate_date(i["air_date"])
+		if op == "<":
+			if date < curr:
+				if table == None:
+					print(json.dumps(i, indent=4))
+				else:
+					print("{:<15}| {:<10}".format('key','value'))
+					print("{:<15}| {:<10}".format('-----','------'))
+					if type(i) is list:
+						for i in i:
+							to_table(i)
+					else:
+						to_table(i)
+		elif op == ">":
+			if date > curr:
+				if table == None:
+					print(json.dumps(i, indent=4))
+				else:
+					print("{:<15}| {:<10}".format('key','value'))
+					print("{:<15}| {:<10}".format('-----','------'))
+					if type(i) is list:
+						for i in i:
+							to_table(i)
+					else:
+						to_table(i)
 		else:
 			print("u must enter > or <")
+			break
 		
 @app.command()
-def filter_by_location(location: str):
+def filter_by_location(location: str, table: str=None):
 	"""
 	enter location and get all the
 	characters from that location
 	"""
 	all_characters = Character.get_all()
 
-	all_characters = [i for a in all_characters for i in a]
 	for i in all_characters:
 		if i["location"]["name"] == location:
-			print(json.dumps(i, indent=4))
+			if table == None:
+				print(json.dumps(i, indent=4))
+			else:
+				print("{:<15}| {:<10}".format('key','value'))
+				print("{:<15}| {:<10}".format('-----','------'))
+				if type(i) is list:
+					for i in i:
+						to_table(i)
+				else:
+					to_table(i)
 
 
 @app.command()
-def filter_by_origin(origin: str):
+def filter_by_origin(origin: str, table: str=None):
 	"""
 	enter origin and get all the
 	characters from that origin
 	"""
 	all_characters = Character.get_all()
 
-	all_characters = [i for a in all_characters for i in a]
 	for i in all_characters:
 		if i["origin"]["name"] == origin:
-			print(json.dumps(i, indent=4))
+			if table == None:
+				print(json.dumps(i, indent=4))
+			else:
+				print("{:<15}| {:<10}".format('key','value'))
+				print("{:<15}| {:<10}".format('-----','------'))
+				if type(i) is list:
+					for i in i:
+						to_table(i)
+				else:
+					to_table(i)
+
 
 
 @app.command()
-def filter_by_season(season: int):
+def filter_by_season(season: int, table: str=None):
 	"""
 	enter season number and get all the
 	episodes in that season
@@ -173,11 +259,21 @@ def filter_by_season(season: int):
 	all_episodes = Episode.get_all()
 	for i in all_episodes:
 		if int(i["episode"][1:3]) == season:
-			print(json.dumps(i, indent=4))
+			if table == None:
+				print(json.dumps(i, indent=4))
+			else:
+				print("{:<15}| {:<10}".format('key','value'))
+				print("{:<15}| {:<10}".format('-----','------'))
+				if type(i) is list:
+					for i in i:
+						to_table(i)
+				else:
+					to_table(i)
+
 
 			
 @app.command()
-def filter_by_episode(episode: int):
+def filter_by_episode(episode: int, table: str=None):
 	"""
 	enter episode and every 
 	episode with that number from every season
@@ -185,10 +281,20 @@ def filter_by_episode(episode: int):
 	all_episodes = Episode.get_all()
 	for i in all_episodes:
 		if int(i["episode"][4:6]) == episode:
-			print(json.dumps(i, indent=4))
+			if table == None:
+				print(json.dumps(i, indent=4))
+			else:
+				print("{:<15}| {:<10}".format('key','value'))
+				print("{:<15}| {:<10}".format('-----','------'))
+				if type(i) is list:
+					for i in i:
+						to_table(i)
+				else:
+					to_table(i)
+
 
 @app.command()
-def most_frequent_character(max: int=None):
+def most_frequent_character(max: int=None, table: str=None):
 	"""
 	get the most frequent character in the series
 	if u input --max NUMBER it will limit the output to that number
@@ -213,10 +319,29 @@ def most_frequent_character(max: int=None):
 			res[names[i]] = characters[i]
 	del res[None]
 	if max != None:
-		tmp = dict(list(res.items())[:max])
-		print(json.dumps(dict(sorted(tmp.items(), key=operator.itemgetter(1),reverse=True)), indent=4))
+		tmp = dict(sorted(dict(list(res.items())[:max]).items(), key=operator.itemgetter(1),reverse=True))
+		if table == None:
+			print(json.dumps(tmp, indent=4))
+		else:
+			print("{:<14} | {:<10}".format('key','value'))
+			print("{:<14} | {:<10}".format('--------------','------'))
+			if type(tmp) is list:
+				for i in tmp:
+					to_table(i)
+			else:
+				to_table(tmp)
 	else:
-		print(json.dumps(dict(sorted(res.items(), key=operator.itemgetter(1),reverse=True)), indent=4))
+		tmp = dict(sorted(res.items(), key=operator.itemgetter(1),reverse=True))
+		if table == None:
+			print(json.dumps(tmp, indent=4))
+		else:
+			print("{:<14} | {:<10}".format('key','value'))
+			print("{:<14} | {:<10}".format('--------------','------'))
+			if type(tmp) is list:
+				for i in tmp:
+					to_table(i)
+			else:
+				to_table(tmp)
 
 
 @app.command()
@@ -241,20 +366,6 @@ def get_image(name=None, type=None, status=None, species=None, gender=None, id: 
 		im.show()
 	return None
 
-
-def to_table(jsn):
-	for key in jsn:
-		if type(jsn[key]) is dict:
-			jsn[key] = jsn[key]["name"]
-		elif type(jsn[key]) is list:
-			jsn[key] = len(jsn[key])
 		
-	for v in jsn.items():
-		label, num = v
-		print("{:<11}| {:<10}".format(label, num))
-	print("----------------------------------------")
-
-		
-
 if __name__ == "__main__":
 	app()
