@@ -4,11 +4,8 @@ import typer
 import json
 import datetime
 import operator
-import pandas as pd
 from PIL import Image
 from io import BytesIO
-from IPython.display import display
-import inspect
 
 from classes import *
 
