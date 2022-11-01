@@ -82,11 +82,14 @@ class Requests():
 		final_url=url+'?'+query_url
 		req = exec_req(final_url)
 		res = []
-		res.append(req["results"])
-		while req["info"]["next"]:
-			req = exec_req(req['info']['next'])
+		try:
 			res.append(req["results"])
-		return res
+			while req["info"]["next"]:
+				req = exec_req(req['info']['next'])
+				res.append(req["results"])
+			return res
+		except:
+			return "no results found"
 	
 
 	def filter_types(url):
