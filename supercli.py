@@ -1,22 +1,19 @@
 #!/usr/bin/python3
 import itertools
-import re
+from typing import OrderedDict
+from rich.console import Console
+from rich.table import Table
 import typer
 import json
 import datetime
 import operator
 from PIL import Image
 from io import BytesIO
-
-from classes import *
+import requests
+from classes import Episode, Location, Character
 
 app = typer.Typer()
-
-api_url="https://rickandmortyapi.com/api/"
-character_url=api_url+"character/"
-location_url=api_url+"location/"
-episode_url=api_url+"episode/"
-
+console = Console()
 
 def translate_date(episode_date: str) -> datetime.datetime.date:
 	"""
@@ -27,24 +24,57 @@ def translate_date(episode_date: str) -> datetime.datetime.date:
 	return datetime.datetime.strptime(episode_date, "%B %d, %Y").date()
 	
 		
-
-
 def to_table(jsn):
 	"""
 	this func receives a dict and prints it as a table
 	"""
-	print("{:<15}| {:<10}".format('key','value'))
-	print("{:<15}| {:<10}".format('-----','------'))
 	for key in jsn:
 		if type(jsn[key]) is dict:
 			jsn[key] = jsn[key]["name"]
 		elif type(jsn[key]) is list:
 			jsn[key] = len(jsn[key])
 		
+	table = Table("Name", "Item")
 	for v in jsn.items():
-		label, num = v
-		print("{:<15}| {:<10}".format(label, num))
-	print("----------------------------------------")
+		name, item = v
+		table.add_row(name, str(item))
+	console.print(table)
+
+def req_for_all(command, table):
+	try:
+		response = eval(command)
+		if table == None:
+			print(json.dumps(response, indent=4))
+		else:
+			if type(response) is list:
+				for i in response:
+					to_table(i)
+			else:
+				to_table(response)
+	except:
+		print("you must enter episode, location or character")
+
+
+def filter(api: str, name=None, episode=None, type=None, dimension=None, status=None, species=None, gender=None, table: str=None):
+	args = ""
+	for i in list(locals().keys()):
+		if eval(i) != None and i != "args":
+			args += i + "=\"" + str(eval(i)) + "\","
+
+	args = args[:-1]
+	command = api + ".filter(" + args + ")"
+	response = eval(command)
+	if response == "no results found":
+		print(response)
+	else:
+		response = list(itertools.chain.from_iterable(response))
+		if table == None:
+			print(json.dumps(response, indent=4))
+		else:
+			for i in response:
+				to_table(i)
+
+
 
 # get a type like location and returns 
 # the atrributes that describes the class
@@ -65,16 +95,9 @@ def get_all(api: str, table: str=None):
 	"""
 	enter type with cappital letter to get all objects
 	"""
+	# consturct a request for all objects
 	command = api.capitalize() + ".get_all()"
-	try:
-		tmp = eval(command)
-		if table == None:
-			print(json.dumps(tmp, indent=4))
-		else:
-			for i in tmp:
-				to_table(i)
-	except:
-		print("you must enter episode, location or character")
+	req_for_all(command, table)
 	
 	
 
@@ -87,18 +110,7 @@ def get_by_id(api: str, id: int, table: str=None):
 	and an id as integer and get an object with that id
 	"""
 	command = api.capitalize() + ".getid(" + str(id) + ")"
-	try:
-		tmp = eval(command)
-		if table == None:
-			print(json.dumps(tmp, indent=4))
-		else:
-			if type(tmp) is list:
-				for i in tmp:
-					to_table(i)
-			else:
-				to_table(tmp)
-	except:
-		print("you must enter episode, location or character")
+	req_for_all(command, table)
 
 
 # filter all the episodes by optional parametes 
@@ -108,22 +120,7 @@ def filter_episode(name=None, episode=None, table: str=None):
 	get param for episode to filter
 	run "./supercli.py get-attributes Episode"
 	"""
-	args = ""
-	for i in list(locals().keys()):
-		if eval(i) != None and i != "args":
-			args += i + "=\"" + str(eval(i)) + "\","
-	args = args[:-1]
-	command = "Episode.filter(" + args + ")"
-	tmp = eval(command)
-	if type(tmp) is str:
-		print(tmp)
-	else:
-		for i in tmp:
-			if table == None:
-				print(json.dumps(i, indent=4))
-			else:
-				for j in i:
-					to_table(j)
+	filter("Episode", name=name, episode=episode, table=table)
 
 	
 @app.command()
@@ -132,23 +129,7 @@ def filter_location(name=None, type=None, dimension=None, table: str=None):
 	get param for location to filter
 	run "./supercli.py get-attributes Location"
 	"""
-	args = ""
-	for i in list(locals().keys()):
-		if eval(i) != None and i != "args":
-			args += i + "=\"" + str(eval(i)) + "\","
-	args = args[:-1]
-	command = "Location.filter(" + args + ")"
-	tmp = eval(command)
-
-	if tmp == "no results found":
-		print(tmp)
-	else:
-		tmp = list(itertools.chain.from_iterable(tmp))
-		if table == None:
-			print(json.dumps(tmp, indent=4))
-		else:
-			for i in tmp:
-				to_table(i)
+	filter("Location", name=name, type=type, dimension=dimension, table=table)
 			
 	
 	
@@ -158,23 +139,7 @@ def filter_character(name=None, type=None, status=None, species=None, gender=Non
 	get param for Character to filter
 	run "./supercli.py get-attributes Character"
 	"""
-	args = ""
-	for i in list(locals().keys()):
-		if eval(i) != None and i != "args":
-			args += i + "=\"" + str(eval(i)) + "\","
-
-	args = args[:-1]
-	command = "Character.filter(" + args + ")"
-	tmp = eval(command)
-	if tmp == "no results found":
-		print(tmp)
-	else:
-		tmp = list(itertools.chain.from_iterable(tmp))
-		if table == None:
-			print(json.dumps(tmp, indent=4))
-		else:
-			for i in tmp:
-				to_table(i)
+	filter("Character", name=name, type=type, status=status, species=species, gender=gender, table=table)	
 
 	
 @app.command()
@@ -192,21 +157,13 @@ def filter_by_date(y: int, m: int, d: int, op: str, table: str=None):
 				if table == None:
 					print(json.dumps(i, indent=4))
 				else:
-					if type(i) is list:
-						for i in i:
-							to_table(i)
-					else:
-						to_table(i)
+					to_table(i)
 		elif op == ">":
 			if date > curr:
 				if table == None:
 					print(json.dumps(i, indent=4))
 				else:
-					if type(i) is list:
-						for i in i:
-							to_table(i)
-					else:
-						to_table(i)
+					to_table(i)
 		else:
 			print("u must enter > or <")
 			break
@@ -323,42 +280,32 @@ def most_frequent_character(max: int=None, table: str=None):
 		characters[int(character["id"])] = len(character["episode"])
 		
 	 
-	res = {}
+	frequent_results = {}
 	for i in range(len(names)):
 		# checking for duplicates and if there are it will add the id to the name like XXXX=1234
-		if names[i] in res:
-			res[names[i] + "-" + str(i)] = characters[i]
+		if names[i] in frequent_results:
+			frequent_results[names[i] + "-" + str(i)] = characters[i]
 		else:
-			res[names[i]] = characters[i]
+			frequent_results[names[i]] = characters[i]
 
 	# delete the first element because it has no use. the dict start at 1 not 0
-	del res[None]
+	del frequent_results[None]
+
+	response = OrderedDict(frequent_results)
 	if max != None:
-		# ordering the dict by desc and saving the top max result to tmp
-		tmp = dict(sorted(dict(list(res.items())[:max]).items(), key=operator.itemgetter(1),reverse=True))
-		
+		# ordering the dict by desc and saving the top max result to response
+		response = dict(itertools.islice(response.items(), max))		
 		# check if user want to print a table or json
 		if table == None:
-			print(json.dumps(tmp, indent=4))
+			print(json.dumps(response, indent=4))
 		else:
-			print("{:<14} | {:<10}".format('key','value'))
-			print("{:<14} | {:<10}".format('--------------','------'))
-			if type(tmp) is list:
-				for i in tmp:
-					to_table(i)
-			else:
-				to_table(tmp)
+			to_table(response)
 	else:
 		# ordering the dict by desc
-		tmp = dict(sorted(res.items(), key=operator.itemgetter(1),reverse=True))
 		if table == None:
-			print(json.dumps(tmp, indent=4))
+			print(json.dumps(response, indent=4))
 		else:
-			if type(tmp) is list:
-				for i in tmp:
-					to_table(i)
-			else:
-				to_table(tmp)
+			to_table(response)
 
 
 @app.command()
