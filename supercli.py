@@ -79,6 +79,13 @@ def filter(api: str, name=None, episode=None, type=None, dimension=None, status=
 				print_as_table(i)
 
 
+def choose_print_type(episode, table):
+	if table == None:
+		print(json.dumps(episode, indent=4))
+	else:
+		print_as_table(episode)
+
+
 # get a type like location and returns 
 # the atrributes that describes the class
 @app.command()
@@ -150,25 +157,15 @@ def filter_by_date(y: int, m: int, d: int, op: str, table: str=None):
 	enter year month and day and and > or < to get all the
 	episodes before or after the input date
 	"""
+	if op != ">" and op != "<": print("u must enter > or <"); return
 	curr = datetime.datetime(year=y, month=m, day=d).date()
 	all_episodes = Api.get_all("Episode")
 	for episode in all_episodes:
 		date = translate_date(episode["air_date"])
 		if op == "<":
-			if date < curr:
-				if table == None:
-					print(json.dumps(episode, indent=4))
-				else:
-					print_as_table(episode)
+			if date < curr: choose_print_type(episode, table)
 		elif op == ">":
-			if date > curr:
-				if table == None:
-					print(json.dumps(episode, indent=4))
-				else:
-					print_as_table(episode)
-		else:
-			print("u must enter > or <")
-			break
+			if date > curr: choose_print_type(episode, table)
 
 
 @app.command()
@@ -284,12 +281,12 @@ def most_frequent_character(max: int=None, table: str=None):
 		
 	 
 	frequent_results = {}
-	for i in range(len(names)):
+	for i, name in enumerate(names):
 		# checking for duplicates and if there are it will add the id to the name like XXXX=1234
-		if names[i] in frequent_results:
-			frequent_results[names[i] + "-" + str(i)] = characters[i]
+		if name in frequent_results:
+			frequent_results[name + "-" + str(i)] = characters[i]
 		else:
-			frequent_results[names[i]] = characters[i]
+			frequent_results[name] = characters[i]
 
 	# delete the first element because it has no use. the dict start at 1 not 0
 	del frequent_results[None]
