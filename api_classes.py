@@ -32,51 +32,6 @@ class Api():
 	def filter_types(api):
 		return Requests.filter_types(get_url(api))
 
-class Character():
-	def get_all():
-		return Requests.get_all(CHARACTER_URL)
-
-	def getid(id):
-		return Requests.getid(CHARACTER_URL, id)
-
-	def filter(**kwargs):
-		return Requests.filter(CHARACTER_URL, **kwargs)
-	
-
-	def filter_types():
-		return Requests.filter_types(CHARACTER_URL)
-
-
-class Location():
-
-	def get_all():
-		return Requests.get_all(LOCATION_URL)
-
-	def getid(id):
-		return Requests.getid(LOCATION_URL, id)
-
-	def filter(**kwargs):
-		return Requests.filter(LOCATION_URL, **kwargs)
-	
-
-	def filter_types():
-		return Requests.filter_types(LOCATION_URL)
-
-
-class Episode():
-	def get_all():
-		return Requests.get_all(EPISODE_URL)
-
-	def getid(id):
-		return Requests.getid(EPISODE_URL, id)
-
-	def filter(**kwargs):
-		return Requests.filter(EPISODE_URL, **kwargs)
-	
-
-	def filter_types():
-		return Requests.filter_types(EPISODE_URL)
-
 
 class Requests():
 	def get_all(url):
