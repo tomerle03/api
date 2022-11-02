@@ -1,13 +1,36 @@
 #!/usr/bin/python3
-import typer
 import requests
-
-app = typer.Typer()
+from requests.exceptions import MissingSchema
 
 API_URL="https://rickandmortyapi.com/api/"
 CHARACTER_URL=API_URL+"character/"
 LOCATION_URL=API_URL+"location/"
 EPISODE_URL=API_URL+"episode/"
+
+
+def get_url(api: str):
+	match(api.capitalize()):
+		case "Episode":
+			return EPISODE_URL
+		case "Location":
+			return LOCATION_URL
+		case "Character":
+			return CHARACTER_URL
+	return "api error, " + api + " does not exist"
+
+class Api():
+	def get_all(api: str):
+		return Requests.get_all(get_url(api))
+
+	def getid(api, id):
+		return Requests.getid(get_url(api), id)
+
+	def filter(**kwargs):
+		return Requests.filter(get_url(kwargs["api"]), **kwargs)
+	
+
+	def filter_types(api):
+		return Requests.filter_types(get_url(api))
 
 class Character():
 	def get_all():
@@ -22,6 +45,7 @@ class Character():
 
 	def filter_types():
 		return Requests.filter_types(CHARACTER_URL)
+
 
 class Location():
 
@@ -40,7 +64,6 @@ class Location():
 
 
 class Episode():
-
 	def get_all():
 		return Requests.get_all(EPISODE_URL)
 
@@ -55,38 +78,46 @@ class Episode():
 		return Requests.filter_types(EPISODE_URL)
 
 
-
 class Requests():
 	def get_all(url):
-		req = exec_req(url)
+		try:
+			request = exec_req(url)
+		except MissingSchema:
+			return
 		res = []
-		res.append(req["results"][:])
-		while req["info"]["next"]:
-			req = exec_req(req['info']['next'])
-			res.append(req["results"][:])
-
+		res.append(request["results"][:])
+		while request["info"]["next"]:
+			request = exec_req(request['info']['next'])
+			res.append(request["results"][:])
+			
+		# [[], [], [], []] -> []
 		res = [i for a in res for i in a]
 		return res
 	
 	def getid(url, id):
 		if id==None:
-			print("You need to pass id of character to get output.")
+			print("You need to pass id to get output.")
 			print("To get list of all characters, use getall() method.")
 			return
-		return exec_req(url+str(id))
+		try:
+			request = exec_req(url+str(id))
+		except MissingSchema:
+			return
+		return request
+
 
 	def filter(url, **kwargs):
 		for value in kwargs:
 				kwargs[value]=value+"="+kwargs[value]
 		query_url='&'.join([values for values in kwargs.values()])
 		final_url=url+'?'+query_url
-		req = exec_req(final_url)
+		request = exec_req(final_url)
 		res = []
 		try:
-			res.append(req["results"])
-			while req["info"]["next"]:
-				req = exec_req(req['info']['next'])
-				res.append(req["results"])
+			res.append(request["results"])
+			while request["info"]["next"]:
+				request = exec_req(request['info']['next'])
+				res.append(request["results"])
 			return res
 		except:
 			return "no results found"
