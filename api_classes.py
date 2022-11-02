@@ -18,6 +18,7 @@ def get_url(api: str):
 			return CHARACTER_URL
 	return "api error, " + api + " does not exist"
 
+
 class Api():
 	def get_all(api: str):
 		return Requests.get_all(get_url(api))
@@ -28,7 +29,6 @@ class Api():
 	def filter(**kwargs):
 		return Requests.filter(get_url(kwargs["api"]), **kwargs)
 	
-
 	def filter_types(api):
 		return Requests.filter_types(get_url(api))
 

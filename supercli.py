@@ -20,7 +20,6 @@ def translate_date(episode_date: str) -> datetime.datetime.date:
 		this func receives a date in str format like this: "December 2, 2013",
 		and return a a date in dateTime format
 	"""
-	
 	return datetime.datetime.strptime(episode_date, "%B %d, %Y").date()
 	
 		
