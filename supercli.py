@@ -273,7 +273,7 @@ def most_frequent_character(max: int=None, table: str=None):
 		else:
 			print_as_table(response)
 
-
+    
 @app.command()
 def get_image(name=None, type=None, status=None, species=None, gender=None, id: int=None):
 	"""
