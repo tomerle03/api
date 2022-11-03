@@ -41,11 +41,11 @@ def print_as_table(jsn):
 
 
 def req_for_all(response, table):
-	if response == None:
+	if not response:
 		print("you must enter episode, location or character")
 		return ""
 	try:
-		if table == None:
+		if not table:
 			print(json.dumps(response, indent=4))
 		else:
 			if type(response) is list:
@@ -71,7 +71,7 @@ def filter(api: str, name=None, episode=None, type=None, dimension=None, status=
 		print(response)
 	else:
 		response = list(itertools.chain.from_iterable(response))
-		if table == None:
+		if not table:
 			print(json.dumps(response, indent=4))
 		else:
 			for i in response:
@@ -79,7 +79,7 @@ def filter(api: str, name=None, episode=None, type=None, dimension=None, status=
 
 
 def choose_print_type(episode, table):
-	if table == None:
+	if not table:
 		print(json.dumps(episode, indent=4))
 	else:
 		print_as_table(episode)
@@ -185,7 +185,7 @@ def filter_by(api: str, type_of_filter: str, user_filter, json_location: str, ta
 			if jsn[type_of_filter][json_location] == user_filter:
 				has_results = True
 				print_as_table(jsn)
-	if has_results == False:
+	if not has_results:
 		print("no results found")
 
 
@@ -262,13 +262,13 @@ def most_frequent_character(max: int=None, table: str=None):
 		# ordering the dict by desc and saving the top max result to response
 		response = dict(itertools.islice(response.items(), max))		
 		# check if user want to print a table or json
-		if table == None:
+		if not table:
 			print(json.dumps(response, indent=4))
 		else:
 			print_as_table(response)
 	else:
 		# ordering the dict by desc
-		if table == None:
+		if not table:
 			print(json.dumps(response, indent=4))
 		else:
 			print_as_table(response)
