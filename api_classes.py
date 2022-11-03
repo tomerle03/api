@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import itertools
 import requests
 from requests.exceptions import MissingSchema
 
@@ -45,8 +46,7 @@ class Requests():
 			request = exec_req(request['info']['next'])
 			res.append(request["results"][:])
 			
-		# [[], [], [], []] -> []
-		res = [i for a in res for i in a]
+		res = list(itertools.chain(*res))
 		return res
 	
 	def getid(url, id):
