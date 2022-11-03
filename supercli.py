@@ -247,12 +247,12 @@ def most_frequent_character(max: int=None, table: str=None):
 		
 	 
 	frequent_results = {}
-	for i, name in enumerate(names):
+	for position, name in enumerate(names):
 		# checking for duplicates and if there are it will add the id to the name like XXXX=1234
 		if name in frequent_results:
-			frequent_results[name + "-" + str(i)] = characters[i]
+			frequent_results[name + "-" + str(position)] = characters[position]
 		else:
-			frequent_results[name] = characters[i]
+			frequent_results[name] = characters[position]
 
 	# delete the first element because it has no use. the dict start at 1 not 0
 	del frequent_results[None]
