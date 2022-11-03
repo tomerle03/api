@@ -5,7 +5,7 @@ from rich.console import Console
 from rich.table import Table
 import typer
 import json
-import datetime
+from datetime import datetime
 from PIL import Image
 from io import BytesIO
 import requests
@@ -15,12 +15,12 @@ from api_classes import Api
 app = typer.Typer()
 console = Console()
 
-def translate_date(episode_date: str) -> datetime.datetime.date:
+def translate_date(episode_date: str) -> datetime.date:
 	"""
 		this func receives a date in str format like this: "December 2, 2013",
 		and return a a date in dateTime format
 	"""
-	return datetime.datetime.strptime(episode_date, "%B %d, %Y").date()
+	return datetime.strptime(episode_date, "%B %d, %Y").date()
 	
 		
 def print_as_table(jsn):
@@ -157,7 +157,7 @@ def filter_by_date(y: int, m: int, d: int, op: str, table: str=None):
 	episodes before or after the input date
 	"""
 	if op != ">" and op != "<": print("u must enter > or <"); return
-	curr = datetime.datetime(year=y, month=m, day=d).date()
+	curr = datetime(year=y, month=m, day=d).date()
 	all_episodes = Api.get_all("Episode")
 	for episode in all_episodes:
 		date = translate_date(episode["air_date"])
@@ -167,27 +167,36 @@ def filter_by_date(y: int, m: int, d: int, op: str, table: str=None):
 			if date > curr: choose_print_type(episode, table)
 
 
+# recieves filter and api to filter by any type of api
+def filter_by(api: str, type_of_filter: str, user_filter, json_location: str, table: str=None):
+	all_apis = Api.get_all(api)
+	has_results = False
+	
+	for jsn in all_apis:
+		if api.capitalize() == "Episode" and json_location == "season":
+			if int(jsn[type_of_filter][1:3]) == user_filter:
+				has_results = True
+				print_as_table(jsn)
+		elif api.capitalize() == "Episode" and json_location == "episode":
+			if int(jsn[type_of_filter][4:6]) == user_filter:
+				has_results = True
+				print_as_table(jsn)
+		else:
+			if jsn[type_of_filter][json_location] == user_filter:
+				has_results = True
+				print_as_table(jsn)
+	if has_results == False:
+		print("no results found")
+
+
+
 @app.command()
 def filter_by_location(location: str, table: str=None) -> None:
 	"""
 	enter location and get all the
 	characters from that location
 	"""
-	all_characters = Api.get_all("Character")
-	flag = False
-	for character in all_characters:
-		if character["location"]["name"] == location:
-			flag = True
-			if table == None:
-				print(json.dumps(character, indent=4))
-			else:
-				if type(character) is list:
-					for mini_character in character:
-						print_as_table(mini_character)
-				else:
-					print_as_table(character)
-	if flag == False:
-		print("no results found for that location")
+	filter_by("character", "location", json_location="name", user_filter=location, table=table)
 
 
 @app.command()
@@ -196,22 +205,7 @@ def filter_by_origin(origin: str, table: str=None):
 	enter origin and get all the
 	characters from that origin
 	"""
-	all_characters = Api.get_all("Character")
-	flag = 0
-	for character in all_characters:
-		if character["origin"]["name"] == origin:
-			flag += 1
-			if table == None:
-				print(json.dumps(character, indent=4))
-			else:
-				if type(character) is list:
-					for mini_character in character:
-						print_as_table(mini_character)
-				else:
-					print_as_table(character)
-	if flag == 0:
-		print("no results found for that location")
-
+	filter_by(api="character", type_of_filter="origin", json_location="name", user_filter=origin, table=table)
 
 
 @app.command()
@@ -220,21 +214,8 @@ def filter_by_season(season: int, table: str=None):
 	enter season number and get all the
 	episodes in that season
 	"""
-	flag = 0
-	all_episodes = Api.get_all("episode")
-	for episode in all_episodes:
-		if int(episode["episode"][1:3]) == season:
-			flag += 1
-			if table == None:
-				print(json.dumps(episode, indent=4))
-			else:
-				if type(episode) is list:
-					for mini_episode in episode:
-						print_as_table(mini_episode)
-				else:
-					print_as_table(episode)
-	if flag == 0:
-		print("no season found")
+	filter_by(api="episode", type_of_filter="episode", user_filter=season, json_location="season", table=table)
+	
 
 			
 @app.command()
@@ -243,21 +224,7 @@ def filter_by_episode(episode: int, table: str=None):
 	enter episode and every 
 	episode with that number from every season
 	"""
-	flag = 0
-	all_episodes = Api.get_all("episode")
-	for episode in all_episodes:
-		if int(episode["episode"][4:6]) == episode:
-			flag += 1
-			if table == None:
-				print(json.dumps(episode, indent=4))
-			else:
-				if type(episode) is list:
-					for mini_episode in episode:
-						print_as_table(mini_episode)
-				else:
-					print_as_table(episode)
-	if flag == 0:
-		print("no episodes found")
+	filter_by(api="episode", type_of_filter="episode", user_filter=episode, json_location="episode", table=table)
 
 
 @app.command()

@@ -63,7 +63,7 @@ class Requests():
 
 	def filter(url, **kwargs):
 		for value in kwargs:
-				kwargs[value]=value+"="+kwargs[value]
+				kwargs[value]=f"{value}={kwargs[value]}"
 		query_url='&'.join([values for values in kwargs.values()])
 		final_url=url+'?'+query_url
 		request = exec_req(final_url)
