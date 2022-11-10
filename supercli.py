@@ -288,12 +288,14 @@ def get_image(name=None, type=None, status=None, species=None, gender=None, id: 
 			if eval(var) != None and var != "args":
 				args += '{0}="{1}"{2}'.format(var, str(eval(var)), ",")
 
+		args += "api=\"character\","
 		args = args[:-1]
-		command = "Character.filter(" + args + ")"
+		command = "Api.filter({0})".format(args)
 		char_list = eval(command)[0]
-		if len(char_list) != 1:
-			print("ur filters got no or more then one character")
+		if len(char_list) != 1 or char_list != None:
+			print("ur filters got no or more then one character. num of results: " + str(len(char_list)))
 			return
+		print(eval(command))
 		image_url = char_list[0]["image"]
 	
 	with Image.open(BytesIO(requests.get(image_url).content)) as im:
